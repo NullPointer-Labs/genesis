@@ -1,7 +1,6 @@
-package service;
+package http;
 
-import http.Request;
-import http.Response;
+import service.Controller;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,12 +8,16 @@ import java.util.Map;
 public class Dispatcher {
     private final Map<String, Controller> routes = new HashMap<>();
 
-    public void register(String path, Controller controller) {
-        routes.put(path, controller);
+    public void register(String method, String path, Controller controller) {
+        String key = method.toUpperCase() + ":" + path;
+        routes.put(key, controller);
     }
 
     public boolean dispatch(Request request, Response response) {
-        Controller controller = routes.get(request.getPath());
+        String key = request.getMethod().toUpperCase() + ":" + request.getPath();
+
+        Controller controller = routes.get(key);
+
         if (controller != null) {
             controller.handle(request, response);
             return true;
