@@ -2,44 +2,63 @@ package framework.server;
 
 import framework.http.Request;
 import framework.http.Response;
-import framework.http.Router;
 
 import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
-    private final Router router;
 
-    public ClientHandler(Socket socket, Router router) {
+    public ClientHandler(Socket socket) {
         this.socket = socket;
-        this.router = router;
     }
 
     @Override
     public void run() {
         try (
-                socket; BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                socket;
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 OutputStream writer = socket.getOutputStream()
         ) {
             Request request = new Request(reader);
-
             if (!request.isValid()) return;
 
             Response response = new Response();
 
-            boolean handled = router.dispatch(request, response);
+            String path = request.getPath();
 
-            if (!handled) {
+            if (path.equals("/")) {
+                path = "/index.html";
+            }
+
+            InputStream fileStream = getClass().getResourceAsStream(path);
+
+            if (fileStream != null) {
+                byte[] fileBytes = fileStream.readAllBytes();
+
+                response.setStatusCode(200);
+                response.setContentType(guessContentType(path));
+                response.setBody(fileBytes);
+
+            } else {
                 response.setStatusCode(404);
-                response.setBody("{\"error\": \"Endpoint not found\"}");
-                response.setContentType("application/json");
+                response.setContentType("text/html");
+                response.setBody("<h1>404 - Arquivo Nao Encontrado</h1>");
             }
 
             response.send(writer);
 
         } catch (Exception e) {
-            System.err.println("Error handling client: " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
+    }
+
+    private String guessContentType(String path) {
+        if (path.endsWith(".html")) return "text/html";
+        if (path.endsWith(".css")) return "text/css";
+        if (path.endsWith(".js")) return "application/javascript";
+        if (path.endsWith(".png")) return "image/png";
+        if (path.endsWith(".jpg")) return "image/jpeg";
+        return "text/plain";
     }
 }
