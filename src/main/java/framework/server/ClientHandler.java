@@ -20,6 +20,7 @@ public class ClientHandler implements Runnable {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 OutputStream writer = socket.getOutputStream()
         ) {
+            Thread.sleep(5000);
             Request request = new Request(reader);
             if (!request.isValid()) return;
 
