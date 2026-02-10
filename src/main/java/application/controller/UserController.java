@@ -1,94 +1,99 @@
 package application.controller;
 
-import application.exceptions.BadRequestException;
-import application.exceptions.ResourceNotFoundException;
+import application.db.Database;
 import application.model.User;
-import application.service.UserService;
-import com.google.gson.Gson;
 import framework.annotations.*;
 import framework.http.Request;
 import framework.http.Response;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class UserController {
-
-    private final Gson gson = new Gson();
-    private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
     @GET("/api/users")
-    public List<User> listUsers() {
-        return userService.findAll();
+    public String listUsers() {
+        List<User> users = Database.findAll();
+
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < users.size(); i++) {
+            User u = users.get(i);
+            json.append("{")
+                    .append("\"id\":").append(u.getId()).append(",")
+                    .append("\"name\":\"").append(u.getName()).append("\",")
+                    .append("\"email\":\"").append(u.getEmail()).append("\"")
+                    .append("}");
+
+            if (i < users.size() - 1) {
+                json.append(",");
+            }
+        }
+        json.append("]");
+        return json.toString();
     }
 
     @GET("/api/users/detail")
-    public Object getUser(Request req, Response res) {
+    public String getUser(Request req, Response res) {
         String idParam = req.getParam("id");
-
         if (idParam == null) {
             res.setStatusCode(400);
-            return Map.of("error", "ID is required");
+            return "{\"error\": \"ID required\"}";
         }
 
         try {
             int id = Integer.parseInt(idParam);
-            return userService.findById(id);
+            User user = Database.findById(id);
+
+            if (user == null) {
+                res.setStatusCode(404);
+                return "{\"error\": \"User not found\"}";
+            }
+
+            return String.format(
+                    "{\"id\": %d, \"name\": \"%s\", \"email\": \"%s\"}",
+                    user.getId(), user.getName(), user.getEmail()
+            );
+
         } catch (NumberFormatException e) {
             res.setStatusCode(400);
-            return Map.of("error", "ID must be a number");
-        } catch (ResourceNotFoundException e) {
-            res.setStatusCode(404);
-            return Map.of("error", e.getMessage());
+            return "{\"error\": \"ID must be a number\"}";
         }
     }
 
     @POST("/api/users")
-    public Object createUser(Request req, Response res) {
+    public String createUser(Request req, Response res) {
         String body = req.getBody();
-        if (body == null || body.isEmpty()) {
-            res.setStatusCode(400);
-            return Map.of("error", "Body is required");
-        }
-
         try {
-            User newUser = gson.fromJson(body, User.class);
-            User savedUser = userService.create(newUser);
+            String name = extractJsonValue(body, "name");
+            String email = extractJsonValue(body, "email");
+
+            if (name == null || name.length() < 3) {
+                res.setStatusCode(400);
+                return "{\"error\": \"Name too short\"}";
+            }
+
+            User newUser = new User(0, name, email);
+            User saved = Database.save(newUser);
+
             res.setStatusCode(201);
-            return savedUser;
-        } catch (BadRequestException e) {
-            res.setStatusCode(400);
-            return Map.of("error", e.getMessage());
+            return String.format(
+                    "{\"id\": %d, \"name\": \"%s\", \"email\": \"%s\"}",
+                    saved.getId(), saved.getName(), saved.getEmail()
+            );
         } catch (Exception e) {
             res.setStatusCode(500);
-            return Map.of("error", "Internal Error");
+            return "{\"error\": \"Failed to parse JSON\"}";
         }
     }
 
-    @DELETE("/api/users")
-    public Object deleteUser(Request req, Response res) {
-        String idParam = req.getParam("id");
-        if (idParam == null) {
-            res.setStatusCode(400);
-            return Map.of("error", "ID is required");
-        }
+    private String extractJsonValue(String json, String key) {
+        String search = "\"" + key + "\":";
+        int start = json.indexOf(search);
+        if (start == -1) return null;
 
-        try {
-            int id = Integer.parseInt(idParam);
-            userService.delete(id);
-            res.setStatusCode(204);
-            return null;
-        } catch (NumberFormatException e) {
-            res.setStatusCode(400);
-            return Map.of("error", "ID must be a number");
-        } catch (ResourceNotFoundException e) {
-            res.setStatusCode(404);
-            return Map.of("error", e.getMessage());
-        }
+        start += search.length();
+        while (json.charAt(start) == ' ' || json.charAt(start) == '"') start++;
+
+        int end = json.indexOf("\"", start);
+        return json.substring(start, end);
     }
 }
