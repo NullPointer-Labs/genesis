@@ -2,12 +2,10 @@ package framework.service;
 
 import com.google.gson.Gson;
 import framework.annotations.*;
-import framework.http.GlobalExceptionHandler;
 import framework.http.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class RouteScanner {
@@ -51,8 +49,9 @@ public class RouteScanner {
                     }
                 }
             } catch (Exception e) {
-                Throwable actualException = (e instanceof InvocationTargetException) ? e.getCause() : e;
-                GlobalExceptionHandler.getInstance().handle(actualException, res);
+                logger.error("Internal Server Error: {}", e.getMessage());
+                res.setStatusCode(500);
+                res.setBody("{\"error\": \"Internal Server Error\"}");
             }
         });
         logger.info("Mapped {} {} -> {}", verb, path, method.getName());

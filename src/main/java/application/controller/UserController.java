@@ -1,6 +1,7 @@
 package application.controller;
 
 import application.exceptions.BadRequestException;
+import application.exceptions.ResourceNotFoundException;
 import application.model.User;
 import application.service.UserService;
 import com.google.gson.Gson;
@@ -9,6 +10,7 @@ import framework.http.Request;
 import framework.http.Response;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class UserController {
@@ -26,45 +28,67 @@ public class UserController {
     }
 
     @GET("/api/users/detail")
-    public User getUser(Request req, Response res) {
+    public Object getUser(Request req, Response res) {
         String idParam = req.getParam("id");
 
         if (idParam == null) {
-            throw new BadRequestException("Query param 'id' is required");
+            res.setStatusCode(400);
+            return Map.of("error", "ID is required");
         }
 
         try {
             int id = Integer.parseInt(idParam);
             return userService.findById(id);
         } catch (NumberFormatException e) {
-            throw new BadRequestException("ID must be a number");
+            res.setStatusCode(400);
+            return Map.of("error", "ID must be a number");
+        } catch (ResourceNotFoundException e) {
+            res.setStatusCode(404);
+            return Map.of("error", e.getMessage());
         }
     }
 
     @POST("/api/users")
-    public User createUser(Request req, Response res) {
+    public Object createUser(Request req, Response res) {
         String body = req.getBody();
         if (body == null || body.isEmpty()) {
-            throw new BadRequestException("Body is required");
+            res.setStatusCode(400);
+            return Map.of("error", "Body is required");
         }
-        User newUser = gson.fromJson(body, User.class);
-        User savedUser = userService.create(newUser);
-        res.setStatusCode(201);
-        return savedUser;
+
+        try {
+            User newUser = gson.fromJson(body, User.class);
+            User savedUser = userService.create(newUser);
+            res.setStatusCode(201);
+            return savedUser;
+        } catch (BadRequestException e) {
+            res.setStatusCode(400);
+            return Map.of("error", e.getMessage());
+        } catch (Exception e) {
+            res.setStatusCode(500);
+            return Map.of("error", "Internal Error");
+        }
     }
 
     @DELETE("/api/users")
-    public void deleteUser(Request req, Response res) {
+    public Object deleteUser(Request req, Response res) {
         String idParam = req.getParam("id");
-        if (idParam == null) throw new BadRequestException("ID required");
+        if (idParam == null) {
+            res.setStatusCode(400);
+            return Map.of("error", "ID is required");
+        }
 
         try {
             int id = Integer.parseInt(idParam);
             userService.delete(id);
             res.setStatusCode(204);
+            return null;
         } catch (NumberFormatException e) {
-            throw new BadRequestException("Invalid ID");
+            res.setStatusCode(400);
+            return Map.of("error", "ID must be a number");
+        } catch (ResourceNotFoundException e) {
+            res.setStatusCode(404);
+            return Map.of("error", e.getMessage());
         }
     }
-
 }
