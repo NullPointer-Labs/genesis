@@ -4,11 +4,9 @@ import application.exceptions.BadRequestException;
 import application.exceptions.ResourceNotFoundException;
 import application.model.User;
 import application.repository.UserRepository;
-import framework.annotations.Service;
 
 import java.util.List;
 
-@Service
 public class UserService {
 
     private final UserRepository repository;

@@ -1,7 +1,5 @@
 package framework.server;
 
-import framework.annotations.RestController;
-import framework.di.DIContainer;
 import framework.http.Router;
 import framework.service.RouteScanner;
 import org.slf4j.Logger;
@@ -16,21 +14,10 @@ import java.util.concurrent.Executors;
 public class HttpServer {
     private static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
     private final Router router = new Router();
-    private final DIContainer diContainer = new DIContainer();
 
-    public void initialize(String basePackage) {
-        try {
-            diContainer.init(basePackage);
 
-            for (Object bean : diContainer.getAllBeans()) {
-                if (bean.getClass().isAnnotationPresent(RestController.class)) {
-                    RouteScanner.scan(bean, router);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Failed to initialize framework", e);
-            throw new RuntimeException(e);
-        }
+    public void registerController(Object controller) {
+        RouteScanner.scan(controller, router);
     }
 
     public void start(int port) {

@@ -1,5 +1,9 @@
+import application.controller.UserController;
 import application.exceptions.BadRequestException;
 import application.exceptions.ResourceNotFoundException;
+import application.repository.UserRepository;
+import application.repository.impl.UserRepositoryImpl;
+import application.service.UserService;
 import com.google.gson.Gson;
 import framework.http.GlobalExceptionHandler;
 import framework.server.HttpServer;
@@ -24,7 +28,10 @@ public class Main {
             res.setContentType("application/json");
         });
 
-        server.initialize("application");
+        UserRepository repository = new UserRepositoryImpl();
+        UserService userService = new UserService(repository);
+        UserController userController = new UserController(userService);
+        server.registerController(userController);
         server.start(port);
     }
 }

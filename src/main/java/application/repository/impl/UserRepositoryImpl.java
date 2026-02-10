@@ -3,12 +3,10 @@ package application.repository.impl;
 import application.db.Database;
 import application.model.User;
 import application.repository.UserRepository;
-import framework.annotations.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public class UserRepositoryImpl implements UserRepository {
 
     @Override
