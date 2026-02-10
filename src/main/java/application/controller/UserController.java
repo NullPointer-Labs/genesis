@@ -85,6 +85,31 @@ public class UserController {
         }
     }
 
+    @DELETE("/api/users")
+    public String deleteUser(Request req, Response res) {
+        String idParam = req.getParam("id");
+        if (idParam == null) {
+            res.setStatusCode(400);
+            return "{\"error\": \"ID required\"}";
+        }
+
+        try {
+            int id = Integer.parseInt(idParam);
+            boolean deleted = Database.delete(id);
+
+            if (deleted) {
+                res.setStatusCode(204);
+                return "";
+            } else {
+                res.setStatusCode(404);
+                return "{\"error\": \"User not found\"}";
+            }
+        } catch (NumberFormatException e) {
+            res.setStatusCode(400);
+            return "{\"error\": \"ID must be a number\"}";
+        }
+    }
+
     private String extractJsonValue(String json, String key) {
         String search = "\"" + key + "\":";
         int start = json.indexOf(search);
