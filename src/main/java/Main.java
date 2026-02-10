@@ -1,4 +1,3 @@
-import application.controller.UserController;
 import application.exceptions.BadRequestException;
 import application.exceptions.ResourceNotFoundException;
 import com.google.gson.Gson;

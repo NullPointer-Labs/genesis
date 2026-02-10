@@ -2,23 +2,22 @@ plugins {
     id("java")
 }
 
-subprojects {
-    apply(plugin = "java")
+group = "com"
+version = "1.0-SNAPSHOT"
 
-    group = "com"
-    version = "1.0-SNAPSHOT"
+repositories {
+    mavenCentral()
+}
 
-    repositories {
-        mavenCentral()
-    }
+dependencies {
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.slf4j:slf4j-simple:2.0.12")
 
-    dependencies {
-        testImplementation(platform("org.junit:junit-bom:5.10.0"))
-        testImplementation("org.junit.jupiter:junit-jupiter")
-        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    }
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+}
 
-    tasks.test {
-        useJUnitPlatform()
-    }
+tasks.test {
+    useJUnitPlatform()
 }
