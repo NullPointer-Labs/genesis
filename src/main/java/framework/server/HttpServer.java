@@ -37,7 +37,7 @@ public class HttpServer {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server running in port " + port);
 
-            ExecutorService threadPool = Executors.newFixedThreadPool(50);
+            ExecutorService threadPool = Executors.newVirtualThreadPerTaskExecutor();
 
             while (!serverSocket.isClosed()) {
                 Socket clientSocket = serverSocket.accept();
