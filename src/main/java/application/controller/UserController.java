@@ -69,8 +69,8 @@ public class UserController {
                 return;
             }
 
-            User newUser = new User(0, name, email);
-            User saved = Database.save(newUser);
+            User user = new User(0, name, email);
+            User saved = Database.save(user);
 
             String json = String.format(
                     "{\"id\": %d, \"name\": \"%s\", \"email\": \"%s\"}",
@@ -99,13 +99,14 @@ public class UserController {
             int id = Integer.parseInt(idParam);
             boolean deleted = Database.delete(id);
 
-            if (deleted) {
-                res.setStatusCode(204);
-            } else {
+            if (!deleted) {
                 res.setStatusCode(404);
                 res.setBody("{\"error\": \"User not found\"}");
-                res.setContentType("application/json");
+                return;
             }
+
+            res.setStatusCode(200);
+            res.setContentType("application/json");
         } catch (NumberFormatException e) {
             res.setStatusCode(400);
             res.setBody("{\"error\": \"ID must be a number\"}");
