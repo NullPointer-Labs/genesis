@@ -13,7 +13,7 @@ public class Database {
     private static final AtomicInteger idGenerator = new AtomicInteger(1);
 
     static {
-        users.add(new User(idGenerator.getAndIncrement(), "Wesley", "wesley@java.com"));
+        users.add(new User(idGenerator.getAndIncrement(), "Null Pointer", "contato.nullpointer@gmail.com"));
         users.add(new User(idGenerator.getAndIncrement(), "Maria", "maria@java.com"));
         users.add(new User(idGenerator.getAndIncrement(), "João", "joao@java.com"));
     }
